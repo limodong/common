@@ -42,26 +42,48 @@ function getMatchChineseCount(str, regular) {
     }
     return count;
 }
-console.log(getMatchChineseCount(`asdb,啊啊稍微,asfsf,阿萨德,fas,啊啊,g,aew,f,asd,f,去玩儿asf,a,sd`, /[\u4e00-\u9fa5]/g));
+// console.log(getMatchChineseCount(`asdb,啊啊稍微,asfsf,阿萨德,fas,啊啊,g,aew,f,asd,f,去玩儿asf,a,sd`, /[\u4e00-\u9fa5]/g));
 
-function filterSensitiveWord(oldStr, replaceStr) {
-    let arrRegular = ["共产党", "秘密", "营销", "too young too simple"];
-    arrRegular = arrRegular.map(item => (`(${item})`)).join("|");
-    const reg = new RegExp(arrRegular, "g");
+/**
+ * 替换字符串中的敏感词
+ * @param {String} oldStr 原始字符串
+ * @param {Array<String>} regularArray 字符串替换的规则数组（在原始字符串中包含在这个数组中的字符串是需要被替换的）
+ * @param {String} replaceStr 最终替换成的字符串
+ */
+function filterSensitiveWord(oldStr, regularArray, replaceStr) {
+    regularArray = regularArray.map(item => (`(${item})`)).join("|");
+    const reg = new RegExp(regularArray, "g");
     let result;
-    let preIdx = 0;
 
+    // 1、提取oldStr中包含在regularArray中的开始下标和结束下标数组
+    let replaceIndexArr = [];
     while (result = reg.exec(oldStr)) {
-        const idx = result.index
-        console.log(oldStr.substr(preIdx, idx));
-        preIdx = idx;
+        replaceIndexArr.push([result.index, (result.index + result[0].length - 1)]);
     }
+    // 2、定义newStr（返回字符串）、end（一个下标）
+    let newStr = "", end = -1;
+    // 遍历字符串，每次循环去对比当前下标是否在replaceIndexArr中，如果不在就往newStr中追加当前索引的字符
+    // 反之需要等到循环的当前下标等于end时将replaceStr追加到newStr中，最后直到循环结束为止
+    for (let i = 0; i < oldStr.length; i++) {
+        if (end === -1) {
+            const temp = replaceIndexArr.find(item => item[0] === i);
+            if (temp) {
+                end = temp[1];
+            } else {
+                newStr += oldStr[i];
+                continue;
+            }
+        }
+        if (i === end) {
+            newStr += replaceStr;
+            end = -1;
+        }
+    }
+    console.log(newStr);
 
-    // oldStr.replace(reg, function (match) {
-    //     return replaceStr;
-    // })
 }
-filterSensitiveWord("这是一个秘密不准告诉别人,没有共产党就没么有新中国，中国新青年宣传的是too young too simple的新思想并不是一个营销概念来收割年轻人", "****");
+// **
+filterSensitiveWord("wefrwe秘密这是秘密一个秘密不准告诉别人,没有共产党就没么有新中国，中国新青年宣传的是too young too simple的新思想并不是一个营销概念来收割年轻人", ["共产党", "秘密", "营销", "too young too simple"], "****");
 
 
 const htmlStr = `
