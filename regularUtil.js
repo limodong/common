@@ -1,6 +1,9 @@
 /**
  * regular：正则
  * 正则表达式一套校验字符串的规则
+ * 
+ * g：全局搜索
+ * i：忽略大小写
  */
 
 
@@ -83,7 +86,7 @@ function filterSensitiveWord(oldStr, regularArray, replaceStr) {
 
 }
 // **
-filterSensitiveWord("wefrwe秘密这是秘密一个秘密不准告诉别人,没有共产党就没么有新中国，中国新青年宣传的是too young too simple的新思想并不是一个营销概念来收割年轻人", ["共产党", "秘密", "营销", "too young too simple"], "****");
+// filterSensitiveWord("wefrwe秘密这是秘密一个秘密不准告诉别人,没有共产党就没么有新中国，中国新青年宣传的是too young too simple的新思想并不是一个营销概念来收割年轻人", ["共产党", "秘密", "营销", "too young too simple"], "****");
 
 
 const htmlStr = `
@@ -148,8 +151,115 @@ const htmlStr = `
     <p>Quos, rem possimus nam tenetur facilis sit inventore obcaecati amet assumenda excepturi atque libero temporibus repellendus pariatur rerum molestiae. Accusantium inventore voluptatum voluptates aut velit illum culpa sequi repellat voluptate?</p>
     <p>Voluptas consequatur odio ipsa delectus inventore animi, quisquam, perspiciatis sapiente culpa harum ex ea rerum pariatur quod et. Tempora, veniam mollitia! Odio ipsa obcaecati maiores voluptatibus commodi mollitia veritatis expedita.</p>`;
 function getHtmlOpenSection(str, regular) {
-    return str.match(regular).length;
+    let result, count = 0;
+    while (regular.test(str)) {
+        count++;
+    }
+    return count;
 }
 
 
 // console.log(getHtmlOpenSection(htmlStr, /<h2>[\u4e00-\u9fa5]\d+[\u4e00-\u9fa5]<\/h2>/g));
+
+
+
+// 正则进阶部分 【1、捕获组 2、反向引用 3、正向断言（预查） 4、负向断言（预查）】
+
+/**
+ * 捕获组：用小括号包裹的部分叫捕获组，捕获组会出现在捕获结果中
+ *        捕获组可以命名，叫做具名捕获组。语法：在捕获组括号内的最开始加上 ?<day> 表示给捕获组命名为day
+ *        非捕获组：语法在捕获组括号内的最开始加上 ?: 表示是一个非捕获组，只是把小括号内的当成一个整体，并不会被捕获
+ * 细节：捕获相对非捕获是会浪费性能
+ */
+
+
+/**
+ * 得到字符串中的每一个日期以及每个日期的年月
+ * @param {String} dateStr 一段日期字符串
+ */
+function getDateInfo(dateStr) {
+    let dateArray = [], result;
+    // 用小括号包裹的部分是捕获组,在捕获组括号最前面加上 ?<month> 表示给捕获组命名为month | 在捕获组括号内的最开始加上 ?: 表示是一个非捕获组，只是把小括号内的当成一个整体，并不会被捕获
+    const reg = /(?<year>\d{4})-(?<month>\d{1,2})-(?:\d{1,2})/g;
+    while (result = reg.exec(dateStr)) {
+        // console.log(result);
+        dateArray.push({
+            s: result[0],
+            year: result.groups.year,
+            month: result.groups.month,
+        })
+    }
+    console.log(dateArray);
+}
+
+// getDateInfo("2022-1-19,2000-9-8,2025-10-11,2024-03-02");
+
+/**
+ * 使用repalce将日期中的 - 转换成 / 
+ * 
+ * @param {String} dateStr 日期字符串
+ */
+function dateFormate(dateStr) {
+    // 第一种方式
+    // return dateStr.replace(/(\d{4})-(\d{1,2})-(\d{1,2})/g, (match, g1, g2, g3) => {
+    //     return `${g1}/${g2}/${g3}`;
+    // })
+    // 第二种方式$1表示捕获组1，$2表示捕获组2，$3表示捕获组3
+    return dateStr.replace(/(\d{4})-(\d{1,2})-(\d{1,2})/g, "$1/$2/$3");
+}
+// console.log(dateFormate("--2022-1-19-,--2000-9-8,- 2025-10-11,2024-03-02- --"));
+
+
+/**
+ * 反向引用：匹配重复出现的字符，语法 -> 在捕获组括号内末尾添加 ```\捕获组编号```
+ * 例子：str1 = 1212; str2 = 1213;
+ *       reg = /(\d\1)/;
+ *       reg.test(str1);//true
+ *       reg.test(str2);//false
+ */
+// const str = 1212;
+// const reg = /(\d\2)/g;
+// console.log(reg.test(str));
+
+
+
+/**
+ * 找到字符串中重复出现多次的字符
+ * @param {String} str 字符串
+ */
+function findRepeatingCharacters(str) {
+    const reg = /(?<char>[a-z])\1+/gi;
+    // return str.match(reg, "$1")
+    let result, characters = [];
+    while (result = reg.exec(str)) {
+        characters.push(result.groups.char)
+    }
+    return characters;
+}
+// console.log(findRepeatingCharacters("aaaaabbbbbbbbccccddddddddefgHHHH"));
+
+/**
+ * 将一串数字字符串从右至左每三位加一个英文逗号（5,622,342）
+ * @param {String} str 一串数字字符串
+ */
+function func(str) {
+    const reg = /\B(?=(\d{3})+$)/g;// 匹配空字符后面是否有连着3个数字
+    return str.replace(reg, ","); // 空字符后面连着3个数字就将空字符替换成逗号
+}
+
+// console.log(func("562663"));
+
+function func2(str) {
+    const reg = /[a-zA-Z]+(?!\d+)/g;
+    return str.match(reg);
+}
+// console.log(func2("asda324sd123ss123ff"))
+
+/**
+ * 校验密码强度
+ * @param {String} pwd 密码
+ */
+function verifyPwdStrength(pwd) {
+
+}
+verifyPwdStrength("@")

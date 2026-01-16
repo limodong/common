@@ -1,7 +1,4 @@
-    // let count = 0, result;
-    // // console.log(newStr);
-    // result = regular.exec(str);
-    // while (result) {
-    //     ++count;
-    //     regular.exec(str);
-    // }
+let result, newStr;
+    while (result = reg.exec(str)) {
+        console.log(result);
+    }
